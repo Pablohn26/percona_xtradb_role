@@ -1,0 +1,75 @@
+---
+
+service:
+  "{{ percona_xtradb_service }}":
+    enabled: true
+    running: true
+
+process:
+  mysqld:
+    running: true
+
+group:
+  "{{ percona_mysql_group }}":
+    exists: true
+
+user:
+  "{{ percona_mysql_user }}":
+    exists: true
+    groups:
+      - "{{ percona_mysql_group }}"
+
+file:
+  "{{percona_mysql_pid_file}}":
+    owner: "{{ percona_mysql_user }}"
+    group: "{{ percona_mysql_group }}"
+    exists: true
+    filetype: file
+    mode: "0640"
+  "{{ percona_mysql_datadir }}":
+    owner: "{{ percona_mysql_user }}"
+    group: "{{ percona_mysql_group }}"
+    exists: true
+    filetype: directory
+    mode: "0750"
+  /lib/systemd/system/mysql.service:
+    owner: root
+    group: root
+    exists: true
+    filetype: file
+    mode: "0644"
+  "{{ percona_mysql_extra_conf_include_dir }}":
+    owner: root
+    group: root
+    exists: true
+    filetype: directory
+    mode: "0755"
+  "{{ percona_mysql_extra_conf_include_dir }}/my.cnf":
+    owner: root
+    group: root
+    exists: true
+    filetype: file
+    mode: "0644"
+  
+command:
+  check_cluster_ready:
+    exit-status: 0
+    exec: sudo mysql -u root -e "show status like 'wsrep_ready';"
+    stdout:
+    - "/ON/"
+    timeout: 10000
+    skip: false
+  check_cluster_connected:
+    exit-status: 0
+    exec: sudo mysql -u root -e "show status like 'wsrep_connected';"
+    stdout:
+    - "/ON/"
+    timeout: 10000
+    skip: false
+  check_cluster_size:
+    exit-status: 0
+    exec: sudo mysql -u root -e "show status like 'wsrep_cluster_size';"
+    stdout:
+    - "/3/"
+    timeout: 10000
+    skip: false

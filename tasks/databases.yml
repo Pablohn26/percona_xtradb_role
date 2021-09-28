@@ -1,0 +1,15 @@
+---
+
+- name: PERCONA_XTRADB | Ensure MySQL databases are present.
+  mysql_db:
+    login_user: "{{ percona_mysql_root_user }}"
+    login_password: "{{ percona_mysql_root_password }}"
+    name: "{{ item.name }}"
+    collation: "{{ item.collation | default('utf8_general_ci') }}"
+    encoding: "{{ item.encoding | default('utf8') }}"
+    state: present
+  with_items: "{{ percona_mysql_databases }}"
+  no_log: true
+  tags:
+    - percona_xtradb_databases
+    - percona_xtradb_configure

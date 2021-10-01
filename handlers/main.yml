@@ -1,0 +1,7 @@
+---
+- name: restart mysql
+  systemd:
+    name: mysql
+    state: restarted
+  throttle: 1
+  when: percona_xtradb_service_state != 'stopped'

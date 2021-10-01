@@ -1,0 +1,54 @@
+---
+
+- name: PERCONA_XTRADB | Installing dependencies
+  apt:
+    pkg: "{{ percona_xtradb_required_libs }}"
+    state: present
+  tags:
+    - percona_xtradb_install
+
+- name: PERCONA_XTRADB | Check percona_xtradb version
+  command: "{{ percona_xtradb_exec_name }} --version"
+  register: percona_xtradb_check
+  changed_when: false
+  ignore_errors: true
+  check_mode: no
+  tags:
+    - percona_xtradb_install
+
+- name: PERCONA_XTRADB | Check if PXC is already installed
+  shell: dpkg -s "{{ percona_xtradb_packages | first }}" | grep Status
+  register: installed_pxc
+  ignore_errors: true
+  changed_when: false
+  failed_when: false
+  tags:
+    - percona_xtradb_install
+
+- block:
+    - name: PERCONA_XTRADB | Download package config deb
+      get_url:
+        url: "{{ percona_xtradb_deb_repo }}"
+        dest: "{{ percona_xtradb_package_path }}"
+
+    - name: PERCONA_XTRADB | Install repository deb
+      apt:
+        deb: "{{ percona_xtradb_package_path }}"
+
+    - name: PERCONA_XTRADB | Update cache
+      apt:
+        update_cache: true
+        allow_unauthenticated: true
+      changed_when: false
+
+    - name: PERCONA_XTRADB | Setting version
+      command: "percona-release setup pxc-{{ percona_xtradb_version | replace('.','') }}"
+      become: true
+
+    - name: PERCONA_XTRADB | Installing packages
+      apt:
+        pkg: "{{ percona_xtradb_packages }}"
+        state: present
+  when: percona_xtradb_force_reinstall or percona_xtradb_check is failed or "Ver " + percona_xtradb_version not in percona_xtradb_check.stdout
+  tags:
+    - percona_xtradb_install

@@ -1,0 +1,80 @@
+---
+
+percona_mysql_databases:
+  - name: test01
+    encoding: utf8
+
+percona_mysql_users:
+  - name: testing
+    password: testing
+    priv:
+      - test01.*:ALL
+
+percona_xtradb_nodes_group: "percona_xtradb_group"
+
+percona_xtradb_global_variables:
+  include_dirs:
+    - "{{ percona_mysql_extra_conf_include_dir }}"
+  groups:
+    client:
+      socket: /var/run/mysqld/mysqld.sock
+    mysqld:
+      server-id: 1
+      datadir: "{{ percona_mysql_datadir }}"
+      socket: /var/run/mysqld/mysqld.sock
+      log-error: /var/log/mysql/error.log
+      pid_file: "{{ percona_mysql_pid_file }}"
+      binlog_expire_logs_seconds: 604800
+      # wsrep configuration
+      wsrep_provider: /usr/lib/galera4/libgalera_smm.so
+      wsrep_cluster_address: "{{ percona_xtradb_wsrep_cluster_address }}"
+      binlog_format: ROW
+      wsrep_slave_threads: 8
+      wsrep_log_conflicts:
+      innodb_autoinc_lock_mode: 2
+      wsrep_node_address: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
+      wsrep_cluster_name: pxc-cluster
+      wsrep_node_name: "{{ ansible_hostname }}"
+      pxc_strict_mode: ENFORCING
+      wsrep_sst_method: xtrabackup-v2
+      pxc-encrypt-cluster-traffic: "OFF"
+
+# MySQL global configuration
+mysql_global_variables:
+  groups:
+    client:
+      user: "{{ percona_mysql_user }}"
+      password: "{{ percona_mysql_root_password }}"
+      port: 3306
+    mysqld:
+      port: 3306
+      bind_address: 0.0.0.0
+      basedir: /usr/
+      tmpdir: /tmp
+      lc_messages_dir: /usr/share/mysql
+      slow_launch_time: 2
+      key_buffer_size: 256M
+      max_allowed_packet: 64M
+      table_open_cache: 256
+      sort_buffer_size: 1M
+      read_buffer_size: 1M
+      read_rnd_buffer_size: 4M
+      thread_cache_size: 8
+      max_connections: 151
+      wait_timeout: 28800
+      innodb_file_per_table: "ON"
+      innodb_buffer_pool_size: 256M
+      innodb_flush_log_at_trx_commit: 1
+      innodb_lock_wait_timeout: 50
+      innodb_log_file_size: 64M
+      innodb_log_buffer_size: 8M
+      general_log_file: /var/log/mysql/mysql.log
+      slow_query_log_file: /var/log/mysql/mysql-slow.log
+      slow_query_log: "ON"
+    mysqldump:
+      quick: 1
+      max_allowed_packet: 64M
+    mysql_safe:
+      pid_file: "{{ percona_mysql_pid_file }}"
+      socket: /var/run/mysqld/mysqld.sock
+      nice: 0

@@ -1,0 +1,37 @@
+---
+
+- block:
+    - name: PERCONA_XTRADB | Starting the master node
+      service:
+        name: "{{ percona_xtradb_service }}@bootstrap.service"
+        state: started
+      when:
+        - percona_xtradb_bind_address == percona_xtradb_master_node
+
+    - name: PERCONA_XTRADB | Starting the slave nodes
+      service:
+        name: "{{ percona_xtradb_service }}"
+        state: started
+      throttle: 1
+      when:
+        - percona_xtradb_bind_address != percona_xtradb_master_node
+
+    - name: PERCONA_XTRADB | Stopping the master node
+      service:
+        name: "{{ percona_xtradb_service }}@bootstrap.service"
+        state: stopped
+      when:
+        - percona_xtradb_bind_address == percona_xtradb_master_node
+      notify: restart mysql
+  when: "installed_pxc.stdout != 'Status: install ok installed'"
+  tags:
+    - percona_xtradb_bootstrap
+
+- name: PERCONA_XTRADB | Ensure service is started and enabled on boot
+  service:
+    name: "{{ percona_xtradb_service }}"
+    state: started
+    enabled: true
+    daemon_reload: true
+  tags:
+    - percona_xtradb_bootstrap

@@ -1,0 +1,5 @@
+---
+- name: Converge
+  hosts: percona_xtradb_group
+  roles:
+    - role: percona_xtradb_role

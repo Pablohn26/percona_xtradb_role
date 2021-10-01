@@ -1,0 +1,24 @@
+---
+
+- name: PERCONA_XTRADB | Ensure ssl config dir exists
+  file:
+    path: "{{ percona_xtradb_secure_conf_dir }}"
+    state: directory
+    owner: mysql
+    group: mysql
+    mode: 0500
+  tags:
+    - percona_xtradb_secure_traffic
+
+- name: PERCONA_XTRADB | Copy keys and certificates (provided by playbooks)
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ percona_xtradb_secure_conf_dir }}/{{ item.path }}"
+    owner: mysql
+    group: mysql
+    mode: 0400
+  with_filetree:
+    - "{{ percona_xtradb_secure_cluster_conf_playbook_path }}/"
+  when: item.state == "file"
+  tags:
+    - percona_xtradb_secure_traffic

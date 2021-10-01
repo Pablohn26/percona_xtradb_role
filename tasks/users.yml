@@ -1,0 +1,27 @@
+---
+
+- name: PERCONA_XTRADB | Set root password
+  mysql_user:
+    name: "{{ percona_mysql_root_user }}"
+    password: "{{ percona_mysql_root_password }}"
+    login_user: root
+    login_host: localhost
+  when: "installed_pxc.stdout != 'Status: install ok installed'"
+  tags:
+    - percona_xtradb_users
+    - percona_xtradb_configure
+
+- name: PERCONA_XTRADB | Ensure MySQL users are present
+  mysql_user:
+    login_user: "{{ percona_mysql_root_user }}"
+    login_password: "{{ percona_mysql_root_password }}"
+    name: "{{ item.name }}"
+    host: "{{ item.host | default('localhost') }}"
+    password: "{{ item.password }}"
+    priv: "{{  item.priv | default(['*.*:USAGE']) | join('/') }}"
+    append_privs: true
+  with_items: "{{ percona_mysql_users }}"
+  no_log: true
+  tags:
+    - percona_xtradb_users
+    - percona_xtradb_configure

@@ -1,28 +1,28 @@
 ---
 
 - name: PERCONA_XTRADB | Install
-  include: install.yml
+  include_tasks: install.yml
   tags:
     - percona_xtradb_install
 
 - name: PERCONA_XTRADB | Configure
-  include: config.yml
+  include_tasks: config.yml
   tags:
     - percona_xtradb_configure
 
 - name: PERCONA_XTRADB | Secure traffic
-  include: secure_traffic.yml
+  include_tasks: secure_traffic.yml
   when: percona_xtradb_secure_cluster_traffic
   tags:
     - percona_xtradb_secure_traffic
 
 - name: PERCONA_XTRADB | Bootstrap
-  include: bootstrap.yml
+  include_tasks: bootstrap.yml
   tags:
     - percona_xtradb_bootstrap
 
 - name: PERCONA_XTRADB | Users
-  include: users.yml
+  include_tasks: users.yml
   when:
     - percona_xtradb_bind_address == percona_xtradb_master_node
   tags:
@@ -30,7 +30,7 @@
     - percona_xtradb_configure
 
 - name: PERCONA_XTRADB | Databases
-  include: databases.yml
+  include_tasks: databases.yml
   when:
     - percona_xtradb_bind_address == percona_xtradb_master_node
   tags:
